@@ -1,17 +1,28 @@
 package main
 
 import (
-	_ "fmt"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
-	"path/filePath"
+	"path/filepath"
 )
 
-type Endpoint struct {
-	urlPath  string
-	filePath string
+func registerEndpoints(mux *http.ServeMux, paths []string) {
+	//print file
+	for _, path := range paths {
+		data, error := ioutil.ReadFile(path)
+		if error != nil {
+			die("path doesn't exist: %s", path)
+		}
+		fmt.Println(string(data[:]))
+	}
+
+	//set contents type
+	//register
 }
 
-func load(path string) []string {
+func makePaths(path string) []string {
 	var paths []string
 	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -22,4 +33,9 @@ func load(path string) []string {
 	})
 
 	return paths
+}
+
+func die(format string, vals ...string) {
+	os.Stderr.WriteString(fmt.Sprintf(format, vals) + "\n")
+	os.Exit(1)
 }

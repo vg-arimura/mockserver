@@ -30,7 +30,6 @@ func main() {
 }
 
 func registerEndpoints(mux *http.ServeMux, endpointInfos []EndpointInfo) {
-	//print file
 	for _, endpointInfo := range endpointInfos {
 		data, error := ioutil.ReadFile(endpointInfo.filePath)
 		if error != nil {

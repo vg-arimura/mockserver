@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestMakePaths(t *testing.T) {
-	infos := makePaths("./testdata")
+func TestMakeEndpointInfos(t *testing.T) {
+	infos := makeEndpointInfos("./testdata")
 	if infos[0].filePath != "testdata/fuga.json" || infos[0].urlPath != "/fuga.json" {
 		t.Fatalf("invalid: %s", infos[0])
 	}

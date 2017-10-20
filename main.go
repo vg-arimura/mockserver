@@ -21,7 +21,7 @@ func main() {
 	port := flag.String("port", "8080", "specify port")
 	flag.Parse()
 
-	endpointInfos := makePaths(*dataPath)
+	endpointInfos := makeEndpointInfos(*dataPath)
 
 	info("start server on port " + *port)
 	mux := http.NewServeMux()
@@ -33,7 +33,7 @@ func registerEndpoints(mux *http.ServeMux, endpointInfos []EndpointInfo) {
 	for _, endpointInfo := range endpointInfos {
 		data, error := ioutil.ReadFile(endpointInfo.filePath)
 		if error != nil {
-			die("file doesn't exist: %s", endpointInfo.filePath)
+			die(fmt.Sprintf("file doesn't exist: %s", endpointInfo.filePath))
 		}
 		info("register endpoint on " + endpointInfo.urlPath)
 		mux.HandleFunc(endpointInfo.urlPath, func(w http.ResponseWriter, r *http.Request) {
@@ -43,13 +43,13 @@ func registerEndpoints(mux *http.ServeMux, endpointInfos []EndpointInfo) {
 	}
 }
 
-func makePaths(dirPath string) []EndpointInfo {
+func makeEndpointInfos(dirPath string) []EndpointInfo {
 	fi, err := os.Stat(dirPath)
 	if os.IsNotExist(err) {
-		die("not exists: %s", dirPath)
+		die(fmt.Sprintf("not exists: %s", dirPath))
 	}
 	if !fi.Mode().IsDir() {
-		die("not dir: %s", dirPath)
+		die(fmt.Sprintf("not dir: %s", dirPath))
 	}
 
 	if strings.HasPrefix(dirPath, "./") {
@@ -62,6 +62,8 @@ func makePaths(dirPath string) []EndpointInfo {
 			return nil
 		}
 		urlPath := strings.Replace(filePath, dirPath, "", 1)
+		urlPath = strings.Replace(urlPath, "__S__", "/", -1)
+
 		endpointInfos = append(endpointInfos, EndpointInfo{
 			urlPath,
 			filePath,
@@ -76,7 +78,7 @@ func info(v string) {
 	log.Println(v)
 }
 
-func die(format string, vals ...string) {
-	os.Stderr.WriteString(fmt.Sprintf(format, vals) + "\n")
+func die(v string) {
+	os.Stderr.WriteString(v + "\n")
 	os.Exit(1)
 }

@@ -4,57 +4,77 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+type EndpointInfo struct {
+	urlPath  string
+	filePath string
+}
 
 func main() {
 	dataPath := flag.String("data", "./data", "specify response dir")
 	port := flag.String("port", "8080", "specify port")
 	flag.Parse()
-	paths := makePaths(*dataPath)
-	fmt.Println(paths)
-	fmt.Println(port)
+
+	endpointInfos := makePaths(*dataPath)
+
+	info("start server on port " + *port)
+	mux := http.NewServeMux()
+	registerEndpoints(mux, endpointInfos)
+	http.ListenAndServe(":"+*port, mux)
 }
 
-func registerEndpoints(mux *http.ServeMux, paths []string) {
+func registerEndpoints(mux *http.ServeMux, endpointInfos []EndpointInfo) {
 	//print file
-	for _, path := range paths {
-		data, error := ioutil.ReadFile(path)
+	for _, endpointInfo := range endpointInfos {
+		data, error := ioutil.ReadFile(endpointInfo.filePath)
 		if error != nil {
-			die("path doesn't exist: %s", path)
+			die("file doesn't exist: %s", endpointInfo.filePath)
 		}
-		//		fmt.Println(string(data[:]))
-		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println(data)
+		info("register endpoint on " + endpointInfo.urlPath)
+		mux.HandleFunc(endpointInfo.urlPath, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", http.DetectContentType(data))
+			fmt.Fprintf(w, string(data))
 		})
-
-		//set
 	}
-
-	//set contents type
-	//register
 }
 
-func makePaths(path string) []string {
-	fi, err := os.Stat(path)
+func makePaths(dirPath string) []EndpointInfo {
+	fi, err := os.Stat(dirPath)
 	if os.IsNotExist(err) {
-		die("not exists: %s", path)
+		die("not exists: %s", dirPath)
 	}
 	if !fi.Mode().IsDir() {
-		die("not dir: %s", path)
+		die("not dir: %s", dirPath)
 	}
-	var paths []string
-	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+
+	if strings.HasPrefix(dirPath, "./") {
+		dirPath = dirPath[2:]
+	}
+
+	var endpointInfos []EndpointInfo
+	filepath.Walk(dirPath, func(filePath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		paths = append(paths, path)
+		urlPath := strings.Replace(filePath, dirPath, "", 1)
+		endpointInfos = append(endpointInfos, EndpointInfo{
+			urlPath,
+			filePath,
+		})
 		return nil
 	})
 
-	return paths
+	return endpointInfos
+}
+
+func info(v string) {
+	log.Println(v)
 }
 
 func die(format string, vals ...string) {

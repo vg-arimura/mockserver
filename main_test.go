@@ -5,16 +5,12 @@ import (
 	"testing"
 )
 
-func TestLoad(t *testing.T) {
-	paths := makePaths("./testdata")
-	if paths[0] != "testdata/fuga.json" {
-		t.Fatalf("invalid path: %s", paths[0])
+func TestMakePaths(t *testing.T) {
+	infos := makePaths("./testdata")
+	if infos[0].filePath != "testdata/fuga.json" || infos[0].urlPath != "/fuga.json" {
+		t.Fatalf("invalid: %s", infos[0])
 	}
-	if paths[1] != "testdata/hoge.html" {
-		t.Fatalf("invalid path: %s", paths[1])
+	if infos[1].filePath != "testdata/hoge.html" || infos[1].urlPath != "/hoge.html" {
+		t.Fatalf("invalid: %s", infos[1])
 	}
-}
-
-func TestRegisterEndpoints(t *testing.T) {
-	registerEndpoints(nil, []string{"testdata/fuga.json", "testdata/hoge.html"})
 }

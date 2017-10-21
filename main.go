@@ -37,6 +37,7 @@ func registerEndpoints(mux *http.ServeMux, endpointInfos []EndpointInfo) {
 		}
 		info("register endpoint on " + endpointInfo.urlPath)
 		mux.HandleFunc(endpointInfo.urlPath, func(w http.ResponseWriter, r *http.Request) {
+			info(fmt.Sprintf("%s %s %s", r.Method, r.URL, r.Proto))
 			w.Header().Set("Content-Type", http.DetectContentType(data))
 			fmt.Fprintf(w, string(data))
 		})

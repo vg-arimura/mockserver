@@ -1,6 +1,6 @@
 # mockserver
 
-Tiny mock server for your development
+Tiny mock server for you
 
 ## How to use
 ```
